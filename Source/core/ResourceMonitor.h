@@ -20,6 +20,7 @@
 #pragma once
 
 #include "Module.h"
+#include <memory>
 #include "Portability.h"
 #include "Singleton.h"
 #include "Thread.h"
@@ -154,7 +155,7 @@ namespace Core {
 
                 _adminLock.Unlock();
 
-                delete _monitor;
+                _monitor.reset(); // delete _monitor;
             }
 
             #ifdef __LINUX__
@@ -232,7 +233,7 @@ namespace Core {
 
             if (_resources.size() == 1) {
                 if (_monitor == nullptr) {
-                    _monitor = new MonitorWorker(*this);
+                    _monitor.reset(new MonitorWorker(*this));
                     _monitorRuns = 0;
                     // Wait till we are at least initialized
                     _monitor->Wait(Thread::BLOCKED | Thread::STOPPED);
@@ -605,7 +606,7 @@ POP_WARNING()
         #endif
 
     private:
-        MonitorWorker* _monitor;
+        std::unique_ptr<MonitorWorker> _monitor;
         mutable Core::CriticalSection _adminLock;
         Resources _resources;
         uint32_t _monitorRuns;
